@@ -87,11 +87,11 @@ class ModuleRegistry
 		if (! is_dir($this->modules_path)) {
 			return new Collection();
 		}
-		
+
 		return FinderCollection::forFiles()
-			->depth('== 1')
+			->depth('== 0')
 			->name('composer.json')
-			->in($this->modules_path)
+			->in($this->modules_path.'/*')
 			->collect()
 			->mapWithKeys(function(SplFileInfo $path) {
 				$config = ModuleConfig::fromComposerFile($path);
