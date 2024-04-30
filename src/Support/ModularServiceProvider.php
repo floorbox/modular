@@ -150,6 +150,15 @@ class ModularServiceProvider extends ServiceProvider
 				->each(function(SplFileInfo $component) use ($blade) {
 					$module = $this->registry()->moduleForPathOrFail($component->getPath());
 					$fully_qualified_component = $module->pathToFullyQualifiedClassName($component->getPathname());
+
+                    $moduleName = strtolower($module->name);
+
+                    if($fully_qualified_component == 'Modules\Admin\View\Components\Order\ActionsBar'){
+                        if (config("{$moduleName}.replace.livewire.{$fully_qualified_component}")) {
+                            $fully_qualified_component = config("{$moduleName}.replace.livewire.{$fully_qualified_component}");
+                        }
+                    }
+
 					$blade->component($fully_qualified_component, null, $module->name);
 				});
 
@@ -158,6 +167,8 @@ class ModularServiceProvider extends ServiceProvider
 				->bladeComponentDirectoryFinder()
 				->each(function(SplFileInfo $component) use ($blade) {
 					$module = $this->registry()->moduleForPathOrFail($component->getPath());
+
+                    $blade->componentNamespace('App\\View\\Components', $module->name);
 					$blade->componentNamespace($module->qualify('View\\Components'), $module->name);
 				});
 		});
