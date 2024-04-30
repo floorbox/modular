@@ -153,8 +153,8 @@ class ModularServiceProvider extends ServiceProvider
 
                     $moduleName = strtolower($module->name);
 
-                    if (config("{$moduleName}.replace.livewire.{$fully_qualified_component}")) {
-                        $fully_qualified_component = config("{$moduleName}.replace.livewire.{$fully_qualified_component}");
+                    if (config("{$moduleName}.replace.blade.{$fully_qualified_component}")) {
+                        $fully_qualified_component = config("{$moduleName}.replace.blade.{$fully_qualified_component}");
                     }
 
 					$blade->component($fully_qualified_component, null, $module->name);
