@@ -5,25 +5,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2024-05-23
+
 ### Changed
 
-- Dropped support for older versions of PHP and Laravel. If you are using Laravel 7 or 8, or PHP 7, please use the 1.x releases
+-   Dropped support for older versions of PHP and Laravel. If you are using Laravel 7 or 8, or PHP 7, please use the 1.x releases
 
 ## [1.12.0] - 2023-05-19
 
 ### Added
 
-- Added support for factory model name resolution inside modules
+-   Added support for factory model name resolution inside modules
 
 ### Fixed
 
-- Added support for new `make:command` changes in Laravel 10
+-   Added support for new `make:command` changes in Laravel 10
 
 ## [1.11.0] - 2023-02-14
 
 ### Changed
 
-- Updated version constraints to add Laravel 10 support and drop automated testing for old versions of PHP and Laravel
+-   Updated version constraints to add Laravel 10 support and drop automated testing for old versions of PHP and Laravel
 
 ## [1.10.0] - 2022-08-12
 
@@ -166,7 +168,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   `Fixed` for any bug fixes.
 -   `Security` in case of vulnerabilities.
 
-[Unreleased]: https://github.com/InterNACHI/modular/compare/1.12.0...HEAD
+[Unreleased]: https://github.com/floorbox/modular/compare/1.0.0...HEAD
+
+[1.0.0]: https://github.com/floorbox/modular/compare/1.12.0...1.0.0
 
 [1.12.0]: https://github.com/InterNACHI/modular/compare/1.11.0...1.12.0
 
