@@ -18,8 +18,11 @@ use InterNACHI\Modular\Support\ModuleRegistry;
  */
 class Modules extends Facade
 {
+	/**
+	 * @see \InterNACHI\Modular\Support\ModuleRegistry
+	 */
 	protected static function getFacadeAccessor(): string
 	{
-		return ModuleRegistry::class;
+		return 'modules';
 	}
 }

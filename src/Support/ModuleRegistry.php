@@ -114,4 +114,14 @@ class ModuleRegistry
 		
 		return explode('/', $path)[0];
 	}
+
+	public function styles(string $module)
+	{
+		return AssetManager::styles($module);
+	}
+
+	public function scripts(string $module)
+	{
+		return AssetManager::scripts($module);
+	}
 }

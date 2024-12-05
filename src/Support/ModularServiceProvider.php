@@ -21,6 +21,7 @@ use InterNACHI\Modular\Console\Commands\ModulesCache;
 use InterNACHI\Modular\Console\Commands\ModulesClear;
 use InterNACHI\Modular\Console\Commands\ModulesList;
 use InterNACHI\Modular\Console\Commands\ModulesSync;
+use InterNACHI\Modular\Support\Facades\Modules;
 use Livewire\Livewire;
 use ReflectionClass;
 use Symfony\Component\Finder\SplFileInfo;
@@ -46,16 +47,22 @@ class ModularServiceProvider extends ServiceProvider
 	{
 		$this->mergeConfigFrom("{$this->base_dir}/config.php", 'app-modules');
 
-		$this->app->singleton(ModuleRegistry::class, function() {
+		$this->app->alias(ModuleRegistry::class, 'modules');
+		$this->app->singleton(ModuleRegistry::class, function () {
 			return new ModuleRegistry(
 				$this->getModulesBasePath(),
 				$this->app->bootstrapPath('cache/modules.php')
 			);
 		});
 
+		$loader = \Illuminate\Foundation\AliasLoader::getInstance();
+		$loader->alias('Modules', Modules::class);
+
+		AssetManager::boot();
+
 		$this->app->singleton(AutoDiscoveryHelper::class);
 
-		$this->app->singleton(MakeMigration::class, function($app) {
+		$this->app->singleton(MakeMigration::class, function ($app) {
 			return new MigrateMakeCommand($app['migration.creator'], $app['composer']);
 		});
 
@@ -103,7 +110,7 @@ class ModularServiceProvider extends ServiceProvider
 
 	protected function bootPackageCommands(): void
 	{
-		if (! $this->app->runningInConsole()) {
+		if (!$this->app->runningInConsole()) {
 			return;
 		}
 
@@ -124,17 +131,17 @@ class ModularServiceProvider extends ServiceProvider
 
 		$this->autoDiscoveryHelper()
 			->routeFileFinder()
-			->each(function(SplFileInfo $file) {
+			->each(function (SplFileInfo $file) {
 				require $file->getRealPath();
 			});
 	}
 
 	protected function bootViews(): void
 	{
-		$this->callAfterResolving('view', function(ViewFactory $view_factory) {
+		$this->callAfterResolving('view', function (ViewFactory $view_factory) {
 			$this->autoDiscoveryHelper()
 				->viewDirectoryFinder()
-				->each(function(SplFileInfo $directory) use ($view_factory) {
+				->each(function (SplFileInfo $directory) use ($view_factory) {
 					$module = $this->registry()->moduleForPathOrFail($directory->getPath());
 					$view_factory->addNamespace($module->name, $directory->getRealPath());
 				});
@@ -143,19 +150,19 @@ class ModularServiceProvider extends ServiceProvider
 
 	protected function bootBladeComponents(): void
 	{
-		$this->callAfterResolving(BladeCompiler::class, function(BladeCompiler $blade) {
+		$this->callAfterResolving(BladeCompiler::class, function (BladeCompiler $blade) {
 			// Boot individual Blade components (old syntax: `<x-module-* />`)
 			$this->autoDiscoveryHelper()
 				->bladeComponentFileFinder()
-				->each(function(SplFileInfo $component) use ($blade) {
+				->each(function (SplFileInfo $component) use ($blade) {
 					$module = $this->registry()->moduleForPathOrFail($component->getPath());
 					$fully_qualified_component = $module->pathToFullyQualifiedClassName($component->getPathname());
 
-                    $moduleName = strtolower($module->name);
+					$moduleName = strtolower($module->name);
 
-                    if (config("{$moduleName}.replace.blade.{$fully_qualified_component}")) {
-                        $fully_qualified_component = config("{$moduleName}.replace.blade.{$fully_qualified_component}");
-                    }
+					if (config("{$moduleName}.replace.blade.{$fully_qualified_component}")) {
+						$fully_qualified_component = config("{$moduleName}.replace.blade.{$fully_qualified_component}");
+					}
 
 					$blade->component($fully_qualified_component, null, $module->name);
 				});
@@ -163,10 +170,10 @@ class ModularServiceProvider extends ServiceProvider
 			// Boot Blade component namespaces (new syntax: `<x-module::* />`)
 			$this->autoDiscoveryHelper()
 				->bladeComponentDirectoryFinder()
-				->each(function(SplFileInfo $component) use ($blade) {
+				->each(function (SplFileInfo $component) use ($blade) {
 					$module = $this->registry()->moduleForPathOrFail($component->getPath());
 
-                    $blade->componentNamespace('App\\View\\Components', $module->name);
+					$blade->componentNamespace('App\\View\\Components', $module->name);
 					$blade->componentNamespace($module->qualify('View\\Components'), $module->name);
 				});
 		});
@@ -174,14 +181,14 @@ class ModularServiceProvider extends ServiceProvider
 
 	protected function bootTranslations(): void
 	{
-		$this->callAfterResolving('translator', function(TranslatorContract $translator) {
-			if (! $translator instanceof Translator) {
+		$this->callAfterResolving('translator', function (TranslatorContract $translator) {
+			if (!$translator instanceof Translator) {
 				return;
 			}
 
 			$this->autoDiscoveryHelper()
 				->langDirectoryFinder()
-				->each(function(SplFileInfo $directory) use ($translator) {
+				->each(function (SplFileInfo $directory) use ($translator) {
 					$module = $this->registry()->moduleForPathOrFail($directory->getPath());
 					$path = $directory->getRealPath();
 
@@ -199,7 +206,7 @@ class ModularServiceProvider extends ServiceProvider
 	{
 		$class_name = 'Diglactic\\Breadcrumbs\\Manager';
 
-		if (! class_exists($class_name)) {
+		if (!class_exists($class_name)) {
 			return;
 		}
 
@@ -207,7 +214,7 @@ class ModularServiceProvider extends ServiceProvider
 		// files, so we'll do the same for consistency-sake
 		$breadcrumbs = $this->app->make($class_name);
 
-		$files = glob($this->getModulesBasePath().'/*/routes/breadcrumbs/*.php');
+		$files = glob($this->getModulesBasePath() . '/*/routes/breadcrumbs/*.php');
 
 		foreach ($files as $file) {
 			require_once $file;
@@ -216,13 +223,13 @@ class ModularServiceProvider extends ServiceProvider
 
 	protected function bootLivewireComponents(): void
 	{
-		if (! class_exists(Livewire::class)) {
+		if (!class_exists(Livewire::class)) {
 			return;
 		}
 
 		$this->autoDiscoveryHelper()
 			->livewireComponentFileFinder()
-			->each(function(SplFileInfo $component) {
+			->each(function (SplFileInfo $component) {
 				$module = $this->registry()->moduleForPathOrFail($component->getPath());
 
 				$component_name = Str::of($component->getRelativePath())
@@ -234,11 +241,11 @@ class ModularServiceProvider extends ServiceProvider
 
 				$fully_qualified_component = $module->pathToFullyQualifiedClassName($component->getPathname());
 
-                $moduleName = strtolower($module->name);
+				$moduleName = strtolower($module->name);
 
-                if(config("{$moduleName}.replace.livewire.{$fully_qualified_component}")){
-                    $fully_qualified_component = config("{$moduleName}.replace.livewire.{$fully_qualified_component}");
-                }
+				if (config("{$moduleName}.replace.livewire.{$fully_qualified_component}")) {
+					$fully_qualified_component = config("{$moduleName}.replace.livewire.{$fully_qualified_component}");
+				}
 
 				Livewire::component("{$module->name}::{$component_name}", $fully_qualified_component);
 			});
@@ -248,7 +255,7 @@ class ModularServiceProvider extends ServiceProvider
 	{
 		$this->autoDiscoveryHelper()
 			->migrationDirectoryFinder()
-			->each(function(SplFileInfo $path) use ($migrator) {
+			->each(function (SplFileInfo $path) use ($migrator) {
 				$migrator->path($path->getRealPath());
 			});
 	}
@@ -265,14 +272,14 @@ class ModularServiceProvider extends ServiceProvider
 	{
 		$this->autoDiscoveryHelper()
 			->modelFileFinder()
-			->each(function(SplFileInfo $file) use ($gate) {
+			->each(function (SplFileInfo $file) use ($gate) {
 				$module = $this->registry()->moduleForPathOrFail($file->getPath());
 				$fully_qualified_model = $module->pathToFullyQualifiedClassName($file->getPathname());
 
 				// First, check for a policy that maps to the full namespace of the model
 				// i.e. Models/Foo/Bar -> Policies/Foo/BarPolicy
 				$namespaced_model = Str::after($fully_qualified_model, 'Models\\');
-				$namespaced_policy = rtrim($module->namespaces->first(), '\\').'\\Policies\\'.$namespaced_model.'Policy';
+				$namespaced_policy = rtrim($module->namespaces->first(), '\\') . '\\Policies\\' . $namespaced_model . 'Policy';
 				if (class_exists($namespaced_policy)) {
 					$gate->policy($fully_qualified_model, $namespaced_policy);
 				}
@@ -281,7 +288,7 @@ class ModularServiceProvider extends ServiceProvider
 				// i.e. Models/Foo/Bar -> Policies/BarPolicy
 				if (false !== strpos($namespaced_model, '\\')) {
 					$simple_model = Str::afterLast($fully_qualified_model, '\\');
-					$simple_policy = rtrim($module->namespaces->first(), '\\').'\\Policies\\'.$simple_model.'Policy';
+					$simple_policy = rtrim($module->namespaces->first(), '\\') . '\\Policies\\' . $simple_model . 'Policy';
 
 					if (class_exists($simple_policy)) {
 						$gate->policy($fully_qualified_model, $simple_policy);
@@ -294,7 +301,7 @@ class ModularServiceProvider extends ServiceProvider
 	{
 		$this->autoDiscoveryHelper()
 			->commandFileFinder()
-			->each(function(SplFileInfo $file) use ($artisan) {
+			->each(function (SplFileInfo $file) use ($artisan) {
 				$module = $this->registry()->moduleForPathOrFail($file->getPath());
 				$class_name = $module->pathToFullyQualifiedClassName($file->getPathname());
 				if ($this->isInstantiableCommand($class_name)) {
@@ -323,6 +330,6 @@ class ModularServiceProvider extends ServiceProvider
 	protected function isInstantiableCommand($command): bool
 	{
 		return is_subclass_of($command, Command::class)
-			&& ! (new ReflectionClass($command))->isAbstract();
+			&& !(new ReflectionClass($command))->isAbstract();
 	}
 }
