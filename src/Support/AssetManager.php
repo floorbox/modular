@@ -3,8 +3,6 @@
 namespace InterNACHI\Modular\Support;
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Blade;
 use Illuminate\Http\Request;
 use InterNACHI\Modular\Support\Facades\Modules;
 
@@ -13,40 +11,6 @@ class AssetManager
     static function boot()
     {
         $instance = new static;
-
-        $instance->registerAssetDirective();
-        $instance->registerAssetRoutes();
-    }
-
-    public function registerAssetDirective()
-    {
-        Blade::directive('moduleStyles', function ($expression) {
-            return <<<PHP
-            {!! app('modules')->styles($expression) !!}
-            PHP;
-        });
-
-        Blade::directive('moduleScripts', function ($expression) {
-            return <<<PHP
-            <?php app('livewire')->forceAssetInjection(); ?>
-            {!! app('modules')->scripts($expression) !!}
-            PHP;
-        });
-    }
-
-    public function registerAssetRoutes()
-    {
-        Route::get('/{module}/pyle.css', function (string $module) {
-            return $this->pretendResponseIsFile(base_path("app-modules/$module/resources/css/pyle.css"), 'text/css');
-        });
-
-        Route::get('/{module}/pyle.js', function (string $module) {
-            return $this->pretendResponseIsFile(base_path("app-modules/$module/dist/pyle.js"), 'text/javascript');
-        });
-
-        Route::get('/{module}/pyle.min.js', function (string $module) {
-            return $this->pretendResponseIsFile(base_path("app-modules/$module/dist/pyle.min.js"), 'text/javascript');
-        });
     }
 
     public static function scripts(string $module)
@@ -55,21 +19,14 @@ class AssetManager
             return '';
         }
 
-        $file = base_path("app-modules/$module/dist/manifest.json");
+        $file = base_path("app-modules/$module/resources/js/module.js");
 
         if (!File::exists($file)) {
             return '';
         }
 
-        $manifest = json_decode(file_get_contents($file), true);
+        return $file;
 
-        $versionHash = $manifest['/pyle.js'];
-
-        if (config('app.debug')) {
-            return '<script src="/' . $module . '/pyle.js?id=' . $versionHash . '" data-navigate-once></script>';
-        } else {
-            return '<script src="/' . $module . '/pyle.min.js?id=' . $versionHash . '" data-navigate-once></script>';
-        }
     }
 
     public static function styles(string $module)
@@ -78,17 +35,25 @@ class AssetManager
             return '';
         }
 
-        $file = base_path("app-modules/$module/dist/manifest.json");
+        $file = base_path("app-modules/$module/resources/css/module.css");
 
         if (!File::exists($file)) {
             return '';
         }
 
-        $manifest = json_decode(file_get_contents($file), true);
+        return $file;
+    }
 
-        $versionHash = $manifest['/pyle.js'];
+    public static function assets(string $module)
+    {
+        $paths = [
+            static::scripts($module),
+            static::styles($module),
+            'resources/js/app.js',
+            'resources/css/app.css',
+        ];
 
-        return '<link rel="stylesheet" href="/' . $module . '/pyle.css">';
+        return collect($paths)->filter()->map(fn ($path) => str($path)->after(base_path() . '/')->toString())->toArray();
     }
 
     public function pretendResponseIsFile($file, $contentType = 'application/javascript; charset=utf-8')
