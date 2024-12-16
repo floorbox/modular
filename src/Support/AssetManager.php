@@ -2,6 +2,7 @@
 
 namespace InterNACHI\Modular\Support;
 
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 use InterNACHI\Modular\Support\Facades\Modules;
@@ -11,6 +12,16 @@ class AssetManager
     static function boot()
     {
         $instance = new static;
+        $instance->registerBladeDirectives();
+    }
+
+    public function registerBladeDirectives()
+    {
+        Blade::directive('viteModule', function ($module) {
+            return <<<PHP
+            {!! app('modules')->assets($module) !!}
+            PHP;
+        });
     }
 
     public static function scripts(string $module)
@@ -53,7 +64,9 @@ class AssetManager
             'resources/css/app.css',
         ];
 
-        return collect($paths)->filter()->map(fn ($path) => str($path)->after(base_path() . '/')->toString())->toArray();
+        $entryPoints = collect($paths)->filter()->map(fn ($path) => str($path)->after(base_path() . '/')->toString())->toArray();
+
+        return \Illuminate\Support\Facades\Vite::withEntryPoints($entryPoints)->toHtml();
     }
 
     public function pretendResponseIsFile($file, $contentType = 'application/javascript; charset=utf-8')

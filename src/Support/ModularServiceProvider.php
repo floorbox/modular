@@ -58,6 +58,8 @@ class ModularServiceProvider extends ServiceProvider
 		$loader = \Illuminate\Foundation\AliasLoader::getInstance();
 		$loader->alias('Modules', Modules::class);
 
+		AssetManager::boot();
+
 		$this->app->singleton(AutoDiscoveryHelper::class);
 
 		$this->app->singleton(MakeMigration::class, function ($app) {
