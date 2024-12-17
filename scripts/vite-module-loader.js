@@ -14,25 +14,42 @@ async function collectModuleAssetsPaths(paths, modulesPath) {
                 // Skip .DS_Store directory
                 continue;
             }
-            const jsPath = path.join(modulesPath, moduleDir, "resources/js/module.js");
-            // Check if the file exists
             try {
-                await fs.access(jsPath);
-                const finalJsPath = jsPath.split("app-modules")[1];
-                paths.push(path.join("app-modules", finalJsPath));
+                const jsPath = path.join(modulesPath, moduleDir, "resources/js");
+                const jsFiles = await fs.readdir(jsPath);
+                for (const jsFile of jsFiles) {
+                    if (jsFile === ".DS_Store" || jsFile === ".gitignore") {
+                        // Skip .DS_Store directory
+                        continue;
+                    }
+                    // Check if the file exists
+                    try {
+                        await fs.access(path.join(jsPath, jsFile));
+                        const finalJsPath = jsPath.split("app-modules")[1];
+                        paths.push(path.join("app-modules", finalJsPath, jsFile));
+                    } catch (err) {}
+                }
             } catch (err) {}
 
-            const cssPath = path.join(modulesPath, moduleDir, "resources/css/module.css");
             try {
-                await fs.access(cssPath);
-                const finalCssPath = cssPath.split("app-modules")[1];
-                paths.push(path.join("app-modules", finalCssPath));
+                const cssPath = path.join(modulesPath, moduleDir, "resources/css");
+                const cssFiles = await fs.readdir(cssPath);
+                for (const cssFile of cssFiles) {
+                    if (cssFile === ".DS_Store" || cssFile === ".gitignore") {
+                        // Skip .DS_Store directory
+                        continue;
+                    }
+                    try {
+                        await fs.access(path.join(cssPath, cssFile));
+                        const finalCssPath = cssPath.split("app-modules")[1];
+                        paths.push(path.join("app-modules", finalCssPath, cssFile));
+                    } catch (err) {}
+                }
             } catch (err) {}
         }
     } catch (error) {
         console.error(`Error reading module statuses or module configurations: ${error}`);
     }
-    console.log(paths);
 
     return paths;
 }
