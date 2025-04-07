@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0] - 2025-04-07
+
 ## [1.0.0] - 2024-05-23
 
 ### Changed
@@ -168,7 +170,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   `Fixed` for any bug fixes.
 -   `Security` in case of vulnerabilities.
 
-[Unreleased]: https://github.com/floorbox/modular/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/floorbox/modular/compare/2.0...HEAD
+
+[2.0]: https://github.com/floorbox/modular/compare/1.0.0...2.0
 
 [1.0.0]: https://github.com/floorbox/modular/compare/1.12.0...1.0.0
 
